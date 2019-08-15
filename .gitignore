@@ -1,2 +1,10 @@
 
 mid_level/
+
+saved_model/
+
+images/
+
+__pycache__/
+
+\.vscode/

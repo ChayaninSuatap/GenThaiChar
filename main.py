@@ -7,7 +7,7 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
-
+import util
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -15,11 +15,11 @@ import numpy as np
 class ACGAN():
     def __init__(self):
         # Input shape
-        self.img_rows = 28
-        self.img_cols = 28
+        self.img_rows = 60
+        self.img_cols = 60
         self.channels = 1
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
-        self.num_classes = 10
+        self.num_classes = 2
         self.latent_dim = 100
 
         optimizer = Adam(0.0002, 0.5)
@@ -57,8 +57,8 @@ class ACGAN():
 
         model = Sequential()
 
-        model.add(Dense(128 * 7 * 7, activation="relu", input_dim=self.latent_dim))
-        model.add(Reshape((7, 7, 128)))
+        model.add(Dense(128 * 15 * 15, activation="relu", input_dim=self.latent_dim))
+        model.add(Reshape((15, 15, 128)))
         model.add(BatchNormalization(momentum=0.8))
         model.add(UpSampling2D())
         model.add(Conv2D(128, kernel_size=3, padding="same"))
@@ -120,11 +120,17 @@ class ACGAN():
 
         # Load the dataset
         (X_train, y_train), (_, _) = mnist.load_data()
+        datloader = util.DatasetLoader()
+        X_train, y_train = datloader.load_data()
 
         # Configure inputs
         X_train = (X_train.astype(np.float32) - 127.5) / 127.5
         X_train = np.expand_dims(X_train, axis=3)
         y_train = y_train.reshape(-1, 1)
+
+        # print(X_train.shape)
+        # print(y_train.shape)
+        # input()
 
         # Adversarial ground truths
         valid = np.ones((batch_size, 1))
@@ -145,7 +151,7 @@ class ACGAN():
 
             # The labels of the digits that the generator tries to create an
             # image representation of
-            sampled_labels = np.random.randint(0, 10, (batch_size, 1))
+            sampled_labels = np.random.randint(0, self.num_classes, (batch_size, 1))
 
             # Generate a half batch of new images
             gen_imgs = self.generator.predict([noise, sampled_labels])
@@ -157,7 +163,6 @@ class ACGAN():
             d_loss_real = self.discriminator.train_on_batch(imgs, [valid, img_labels])
             d_loss_fake = self.discriminator.train_on_batch(gen_imgs, [fake, sampled_labels])
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
-
             # ---------------------
             #  Train Generator
             # ---------------------
@@ -174,7 +179,7 @@ class ACGAN():
                 self.sample_images(epoch)
 
     def sample_images(self, epoch):
-        r, c = 10, 10
+        r, c = 10 , self.num_classes
         noise = np.random.normal(0, 1, (r * c, 100))
         sampled_labels = np.array([num for _ in range(r) for num in range(c)])
         gen_imgs = self.generator.predict([noise, sampled_labels])
