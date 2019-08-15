@@ -1,0 +1,1 @@
+ajkjob_genthaichar
