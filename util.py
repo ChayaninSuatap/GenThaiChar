@@ -10,12 +10,12 @@ class DatasetLoader:
     def load_data(self, dirname='mid_level'):
         xs=[]
         ys=[]
-        for class_i ,subdir in enumerate(os.listdir(dirname)[:2]):
+        for class_i ,subdir in enumerate(os.listdir(dirname)):
             fulldirpath = dirname + '/' + subdir
             for fn in os.listdir(fulldirpath):
                 img = Image.open(fulldirpath + '/' + fn).convert('L')
                 img = np.array(img)
-                # img = np.expand_dims(img, axis=3)
+                img = 256 - img
                 xs.append(img)
                 ys.append(class_i)
         return np.array(xs), np.array(ys)

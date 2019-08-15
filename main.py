@@ -19,7 +19,7 @@ class ACGAN():
         self.img_cols = 60
         self.channels = 1
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
-        self.num_classes = 2
+        self.num_classes = 55
         self.latent_dim = 100
 
         optimizer = Adam(0.0002, 0.5)
@@ -120,6 +120,7 @@ class ACGAN():
 
         # Load the dataset
         (X_train, y_train), (_, _) = mnist.load_data()
+
         datloader = util.DatasetLoader()
         X_train, y_train = datloader.load_data()
 
@@ -179,7 +180,7 @@ class ACGAN():
                 self.sample_images(epoch)
 
     def sample_images(self, epoch):
-        r, c = 10 , self.num_classes
+        r, c = 10 , 10
         noise = np.random.normal(0, 1, (r * c, 100))
         sampled_labels = np.array([num for _ in range(r) for num in range(c)])
         gen_imgs = self.generator.predict([noise, sampled_labels])
