@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class ACGAN():
-    def __init__(self):
+    def __init__(self, initial_epoch=0, gen_model_fn=None, dis_model_fn=None):
+        self.initial_epoch=initial_epoch
         # Input shape
         self.img_rows = 60
         self.img_cols = 60
@@ -27,12 +28,14 @@ class ACGAN():
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
+        if dis_model_fn != None: self.discriminator.load_weights(dis_model_fn)
         self.discriminator.compile(loss=losses,
             optimizer=optimizer,
             metrics=['accuracy'])
 
         # Build the generator
         self.generator = self.build_generator()
+        if gen_model_fn != None: self.generator.load_weights(gen_model_fn)
 
         # The generator takes noise and the target label as input
         # and generates the corresponding digit of that label
@@ -137,7 +140,7 @@ class ACGAN():
         valid = np.ones((batch_size, 1))
         fake = np.zeros((batch_size, 1))
 
-        for epoch in range(epochs):
+        for epoch in range(self.initial_epoch, epochs):
 
             # ---------------------
             #  Train Discriminator
@@ -213,5 +216,5 @@ class ACGAN():
 
 
 if __name__ == '__main__':
-    acgan = ACGAN()
-    acgan.train(epochs=14000, batch_size=32, sample_interval=200)
+    acgan = ACGAN(initial_epoch=5400, dis_model_fn='saved_model/discriminator_weights.hdf5', gen_model_fn='saved_model/generator_weights.hdf5')
+    acgan.train(epochs=14000, batch_size=128, sample_interval=50)
