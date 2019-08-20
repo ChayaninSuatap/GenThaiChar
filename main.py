@@ -203,18 +203,24 @@ class ACGAN():
     def save_model(self):
 
         def save(model, model_name):
-            model_path = "saved_model/%s.json" % model_name
-            weights_path = "saved_model/%s_weights.hdf5" % model_name
-            options = {"file_arch": model_path,
-                        "file_weight": weights_path}
-            json_string = model.to_json()
-            open(options['file_arch'], 'w').write(json_string)
-            model.save_weights(options['file_weight'])
+            for i in range(2):
+                if i==0:
+                    model_path = "saved_model/%s.json" % model_name
+                    weights_path = "saved_model/%s.hdf5" % model_name
+                elif i==1:
+                    model_path = "saved_model/%s.json" % model_name
+                    weights_path = "saved_model/%s.backup.hdf5" % model_name
+
+                options = {"file_arch": model_path,
+                            "file_weight": weights_path}
+                json_string = model.to_json()
+                open(options['file_arch'], 'w').write(json_string)
+                model.save_weights(options['file_weight'])
 
         save(self.generator, "generator")
         save(self.discriminator, "discriminator")
 
 
 if __name__ == '__main__':
-    acgan = ACGAN(initial_epoch=5400, dis_model_fn='saved_model/discriminator_weights.hdf5', gen_model_fn='saved_model/generator_weights.hdf5')
-    acgan.train(epochs=14000, batch_size=128, sample_interval=50)
+    acgan = ACGAN(initial_epoch=29950, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5')
+    acgan.train(epochs=99999, batch_size=128, sample_interval=50)
