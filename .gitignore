@@ -8,3 +8,7 @@ images/
 __pycache__/
 
 \.vscode/
+
+sample_images_by_class_vanilla/
+
+losses\.png

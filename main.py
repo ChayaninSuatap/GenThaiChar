@@ -9,11 +9,12 @@ from keras.models import Sequential, Model
 from keras.optimizers import Adam
 import util
 import matplotlib.pyplot as plt
-
+import os
 import numpy as np
+from PIL import Image
 
 class ACGAN():
-    def __init__(self, initial_epoch=0, gen_model_fn=None, dis_model_fn=None):
+    def __init__(self, initial_epoch=0, gen_model_fn=None, dis_model_fn=None, latent_dim=100):
         self.initial_epoch=initial_epoch
         # Input shape
         self.img_rows = 60
@@ -21,7 +22,11 @@ class ACGAN():
         self.channels = 1
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
         self.num_classes = 55
-        self.latent_dim = 100
+        self.latent_dim = latent_dim
+
+        #noise for _sample_images
+        np.random.seed(7)
+        self.noise_for_sample_images = np.random.normal(0, 1, (10 * 10, self.latent_dim))
 
         optimizer = Adam(0.0002, 0.5)
         losses = ['binary_crossentropy', 'sparse_categorical_crossentropy']
@@ -74,11 +79,9 @@ class ACGAN():
         model.add(Conv2D(self.channels, kernel_size=3, padding='same'))
         model.add(Activation("tanh"))
 
-        model.summary()
-
         noise = Input(shape=(self.latent_dim,))
         label = Input(shape=(1,), dtype='int32')
-        label_embedding = Flatten()(Embedding(self.num_classes, 100)(label))
+        label_embedding = Flatten()(Embedding(self.num_classes, self.latent_dim)(label))
 
         model_input = multiply([noise, label_embedding])
         img = model(model_input)
@@ -106,7 +109,6 @@ class ACGAN():
         model.add(Dropout(0.25))
 
         model.add(Flatten())
-        model.summary()
 
         img = Input(shape=self.img_shape)
 
@@ -114,9 +116,9 @@ class ACGAN():
         features = model(img)
 
         # Determine validity and label of the image
-        validity = Dense(1, activation="sigmoid")(features)
-        label = Dense(self.num_classes, activation="softmax")(features)
-
+        validity = Dense(1, activation="sigmoid", name='dense_valid')(features)
+        label = Dense(self.num_classes, activation="softmax", name='dense_classes')(features)
+        
         return Model(img, [validity, label])
 
     def train(self, epochs, batch_size=128, sample_interval=50):
@@ -140,6 +142,8 @@ class ACGAN():
         valid = np.ones((batch_size, 1))
         fake = np.zeros((batch_size, 1))
 
+        d_losses = []
+        g_losses = []
         for epoch in range(self.initial_epoch, epochs):
 
             # ---------------------
@@ -151,7 +155,7 @@ class ACGAN():
             imgs = X_train[idx]
 
             # Sample noise as generator input
-            noise = np.random.normal(0, 1, (batch_size, 100))
+            noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
 
             # The labels of the digits that the generator tries to create an
             # image representation of
@@ -175,18 +179,28 @@ class ACGAN():
             g_loss = self.combined.train_on_batch([noise, sampled_labels], [valid, sampled_labels])
 
             # Plot the progress
-            print ("%d [D loss: %f, acc.: %.2f%%, op_acc: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[3], 100*d_loss[4], g_loss[0]))
+            print ("%d [D loss: %f, fake_real_acc.: %.2f%%, pred_class_acc: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[3], 100*d_loss[4], g_loss[0]))
+            d_losses.append(d_loss[0])
+            g_losses.append(g_loss[0])
 
             # If at save interval => save generated image samples
             if epoch % sample_interval == 0:
-                self.save_model()
-                self.sample_images(epoch)
+                self._save_model()
+                self._sample_images(epoch)
+                self._plot_losses(epoch, d_losses, g_losses)
 
-    def sample_images(self, epoch):
+
+    def _sample_images(self, epoch):
+        if epoch == 0:
+            return
+
+        plt.clf()
+
         r, c = 10 , 10
-        noise = np.random.normal(0, 1, (r * c, 100))
+        noise = np.random.normal(0, 1, (r * c, self.latent_dim))
         sampled_labels = np.array([num for _ in range(r) for num in range(c)])
         gen_imgs = self.generator.predict([noise, sampled_labels])
+
         # Rescale images 0 - 1
         gen_imgs = 0.5 * gen_imgs + 0.5
 
@@ -199,9 +213,28 @@ class ACGAN():
                 cnt += 1
         fig.savefig("images/%d.png" % epoch)
         plt.close()
+    
+    def sample_images_by_class(self, sample_per_class):
+        for class_i,fdn in enumerate(os.listdir('sample_images_by_class')):
+            noise = self.noise_for_sample_images
+            print(noise) #1.6905257
 
-    def save_model(self):
+            labels = np.array([class_i] * 55)
+            gen_imgs = self.generator.predict([noise, labels])
+            gen_imgs = 1-(0.5 * gen_imgs + 0.5)
+            for img_i in range(gen_imgs.shape[0]):
+                result = Image.fromarray((gen_imgs[img_i,:,:,0] * 255).astype(np.uint8))
+                result.save('sample_images_by_class/' + fdn + '/' + str(img_i) + '.bmp')
 
+    def _plot_losses(self, epoch, d_losses, g_losses):
+        plt.clf()
+        plt.plot(d_losses, label='discriminator')
+        plt.plot(g_losses, label='generator')
+        plt.legend(loc='best')
+        plt.title('epoch ' + str(epoch))
+        plt.savefig('losses.png')
+
+    def _save_model(self):
         def save(model, model_name):
             for i in range(2):
                 if i==0:
@@ -222,5 +255,7 @@ class ACGAN():
 
 
 if __name__ == '__main__':
-    acgan = ACGAN(initial_epoch=29950, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5')
-    acgan.train(epochs=99999, batch_size=128, sample_interval=50)
+    # acgan = ACGAN(initial_epoch=30250, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5')
+    acgan = ACGAN(latent_dim=300) #, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5', initial_epoch=0)
+    acgan.train(epochs=99999, batch_size=100, sample_interval=50)
+    # acgan.sample_images_by_class(40)
