@@ -10,7 +10,10 @@ class DatasetLoader:
     def load_data(self, dirname='mid_level'):
         xs=[]
         ys=[]
-        for class_i ,subdir in enumerate(os.listdir(dirname)):
+
+        fds = map(str,sorted(map(int,os.listdir(dirname))))
+        
+        for class_i ,subdir in enumerate(fds):
             fulldirpath = dirname + '/' + subdir
             for fn in os.listdir(fulldirpath):
                 img = Image.open(fulldirpath + '/' + fn).convert('L')
