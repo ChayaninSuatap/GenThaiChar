@@ -202,7 +202,7 @@ class ACGAN():
         plt.clf()
 
         r, c = 10 , 10
-        noise = np.random.normal(0, 1, (r * c, self.latent_dim))
+        noise = self.noise_for_sample_images
         sampled_labels = np.array([num for _ in range(r) for num in range(c)])
         gen_imgs = self.generator.predict([noise, sampled_labels])
 
@@ -225,8 +225,7 @@ class ACGAN():
     
     def sample_images_by_class(self, sample_per_class):
         for class_i,fdn in enumerate(os.listdir('sample_images_by_class')):
-            noise = self.noise_for_sample_images
-            print(noise) #1.6905257
+            noise = np.random.normal(0, 1, (r * c, self.latent_dim))
 
             labels = np.array([class_i] * 55)
             gen_imgs = self.generator.predict([noise, labels])
@@ -273,6 +272,6 @@ class ACGAN():
 
 if __name__ == '__main__':
     # acgan = ACGAN(initial_epoch=30250, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5')
-    acgan = ACGAN(latent_dim=300, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5', initial_epoch=3850)
+    acgan = ACGAN(latent_dim=300, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5', initial_epoch=9400)
     acgan.train(epochs=99999, batch_size=100, sample_interval=50)
     # acgan.sample_images_by_class(40)
