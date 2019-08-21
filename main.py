@@ -124,8 +124,6 @@ class ACGAN():
     def train(self, epochs, batch_size=128, sample_interval=50):
 
         # Load the dataset
-        (X_train, y_train), (_, _) = mnist.load_data()
-
         datloader = util.DatasetLoader()
         X_train, y_train = datloader.load_data()
 
