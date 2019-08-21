@@ -62,6 +62,9 @@ class ACGAN():
         self.combined = Model([noise, label], [valid, target_label])
         self.combined.compile(loss=losses,
             optimizer=optimizer)
+        
+        from matplotlib.pyplot import rcParams
+        rcParams['figure.figsize'] = 14, 8
 
     def build_generator(self):
 
