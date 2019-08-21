@@ -14,8 +14,10 @@ import numpy as np
 from PIL import Image
 
 class ACGAN():
-    def __init__(self, initial_epoch=0, gen_model_fn=None, dis_model_fn=None, latent_dim=100):
+    def __init__(self, initial_epoch=0, gen_model_fn=None, dis_model_fn=None, latent_dim=100, use_colab=False, colab_path=None):
         self.initial_epoch=initial_epoch
+        self.use_colab = use_colab
+        self.colab_path = colab_path
         # Input shape
         self.img_rows = 60
         self.img_cols = 60
@@ -177,7 +179,9 @@ class ACGAN():
             g_loss = self.combined.train_on_batch([noise, sampled_labels], [valid, sampled_labels])
 
             # Plot the progress
-            print ("%d [D loss: %f, fake_real_acc.: %.2f%%, pred_class_acc: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[3], 100*d_loss[4], g_loss[0]))
+            print('',end='\r')
+            print ("%d [D loss: %f, fake_real_acc.: %.2f%%, pred_class_acc: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[3], 100*d_loss[4], g_loss[0])
+                , end='')
             d_losses.append(d_loss[0])
             g_losses.append(g_loss[0])
 
@@ -209,7 +213,11 @@ class ACGAN():
                 axs[i,j].imshow(gen_imgs[cnt,:,:,0], cmap='gray')
                 axs[i,j].axis('off')
                 cnt += 1
-        fig.savefig("images/%d.png" % epoch)
+        
+        if self.use_colab:
+            fig.savefig("%s/images/%d.png" % (self.colab_path,epoch))
+        else:
+            fig.savefig('images/%d.png' % (epoch,))
         plt.close()
     
     def sample_images_by_class(self, sample_per_class):
@@ -230,7 +238,11 @@ class ACGAN():
         plt.plot(g_losses, label='generator')
         plt.legend(loc='best')
         plt.title('epoch ' + str(epoch))
-        plt.savefig('losses.png')
+
+        if self.use_colab:
+            plt.savefig('%s/losses.png' % (self.colab_path,))
+        else:
+            plt.savefig('losses.png')
 
     def _save_model(self):
         def save(model, model_name):
@@ -241,6 +253,10 @@ class ACGAN():
                 elif i==1:
                     model_path = "saved_model/%s.json" % model_name
                     weights_path = "saved_model/%s.backup.hdf5" % model_name
+                
+                if self.use_colab:
+                    model_path = self.colab_path + '/' + model_path
+                    weights_path = self.colab_path + '/' + weights_path
 
                 options = {"file_arch": model_path,
                             "file_weight": weights_path}
@@ -254,6 +270,6 @@ class ACGAN():
 
 if __name__ == '__main__':
     # acgan = ACGAN(initial_epoch=30250, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5')
-    acgan = ACGAN(latent_dim=300) #, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5', initial_epoch=0)
+    acgan = ACGAN(latent_dim=300, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5', initial_epoch=3850)
     acgan.train(epochs=99999, batch_size=100, sample_interval=50)
     # acgan.sample_images_by_class(40)
