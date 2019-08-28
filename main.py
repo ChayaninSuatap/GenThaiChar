@@ -79,13 +79,13 @@ class ACGAN():
         model.add(BatchNormalization(momentum=0.8))
         model.add(UpSampling2D())
 
-        for _ in self.gen_stack_conv_n:
+        for _ in range(self.gen_stack_conv_n):
             model.add(Conv2D(128, kernel_size=3, padding="same"))
             model.add(PReLU())
             model.add(BatchNormalization(momentum=0.8))
         model.add(UpSampling2D())
 
-        for _ in self.gen_stack_conv_n:
+        for _ in range(self.gen_stack_conv_n):
             model.add(Conv2D(64, kernel_size=3, padding="same"))
             model.add(PReLU())
             model.add(BatchNormalization(momentum=0.8))
