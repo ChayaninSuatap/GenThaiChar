@@ -14,3 +14,7 @@ sample_images_by_class_vanilla/
 losses\.png
 
 mid_level.zip
+
+sample_images_by_class_latent_dim400/
+
+gen_thai_char.zip
