@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from keras.datasets import mnist
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply
+from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, PReLu
 from keras.layers import BatchNormalization, Activation, Embedding, ZeroPadding2D
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
@@ -14,10 +14,12 @@ import numpy as np
 from PIL import Image
 
 class ACGAN():
-    def __init__(self, initial_epoch=0, gen_model_fn=None, dis_model_fn=None, latent_dim=100, use_colab=False, colab_path=None):
+    def __init__(self, initial_epoch=0, gen_model_fn=None, dis_model_fn=None, latent_dim=100, use_colab=False, colab_path=None,
+        gen_stack_conv_n=1):
         self.initial_epoch=initial_epoch
         self.use_colab = use_colab
         self.colab_path = colab_path
+        self.gen_stack_conv_n = gen_stack_conv_n
         # Input shape
         self.img_rows = 60
         self.img_cols = 60
@@ -69,18 +71,26 @@ class ACGAN():
     def build_generator(self):
 
         model = Sequential()
-
-        model.add(Dense(128 * 15 * 15, activation="relu", input_dim=self.latent_dim))
+        #reshape input
+        model.add(Dense(128 * 15 * 15, input_dim=self.latent_dim))
+        model.add(PReLu())
         model.add(Reshape((15, 15, 128)))
+
         model.add(BatchNormalization(momentum=0.8))
         model.add(UpSampling2D())
-        model.add(Conv2D(128, kernel_size=3, padding="same"))
-        model.add(Activation("relu"))
-        model.add(BatchNormalization(momentum=0.8))
+
+        for _ in self.gen_stack_conv_n:
+            model.add(Conv2D(128, kernel_size=3, padding="same"))
+            model.add(PReLu())
+            model.add(BatchNormalization(momentum=0.8))
         model.add(UpSampling2D())
-        model.add(Conv2D(64, kernel_size=3, padding="same"))
-        model.add(Activation("relu"))
-        model.add(BatchNormalization(momentum=0.8))
+
+        for _ in self.gen_stack_conv_n:
+            model.add(Conv2D(64, kernel_size=3, padding="same"))
+            model.add(PReLu())
+            model.add(BatchNormalization(momentum=0.8))
+
+        #output 60x60x3 dimension (normal image)
         model.add(Conv2D(self.channels, kernel_size=3, padding='same'))
         model.add(Activation("tanh"))
 
