@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from keras.datasets import mnist
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, PReLu
+from keras.layers import Input, Dense, Reshape, Flatten, Dropout, multiply, PReLU
 from keras.layers import BatchNormalization, Activation, Embedding, ZeroPadding2D
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
@@ -73,7 +73,7 @@ class ACGAN():
         model = Sequential()
         #reshape input
         model.add(Dense(128 * 15 * 15, input_dim=self.latent_dim))
-        model.add(PReLu())
+        model.add(PReLU())
         model.add(Reshape((15, 15, 128)))
 
         model.add(BatchNormalization(momentum=0.8))
@@ -81,13 +81,13 @@ class ACGAN():
 
         for _ in self.gen_stack_conv_n:
             model.add(Conv2D(128, kernel_size=3, padding="same"))
-            model.add(PReLu())
+            model.add(PReLU())
             model.add(BatchNormalization(momentum=0.8))
         model.add(UpSampling2D())
 
         for _ in self.gen_stack_conv_n:
             model.add(Conv2D(64, kernel_size=3, padding="same"))
-            model.add(PReLu())
+            model.add(PReLU())
             model.add(BatchNormalization(momentum=0.8))
 
         #output 60x60x3 dimension (normal image)
