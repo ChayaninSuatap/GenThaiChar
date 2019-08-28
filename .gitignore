@@ -12,3 +12,5 @@ __pycache__/
 sample_images_by_class_vanilla/
 
 losses\.png
+
+mid_level.zip

@@ -37,14 +37,14 @@ class ACGAN():
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
-        if dis_model_fn != None: self.discriminator.load_weights(dis_model_fn)
+        if dis_model_fn != None and initial_epoch>0 : self.discriminator.load_weights(dis_model_fn)
         self.discriminator.compile(loss=losses,
             optimizer=optimizer,
             metrics=['accuracy'])
 
         # Build the generator
         self.generator = self.build_generator()
-        if gen_model_fn != None: self.generator.load_weights(gen_model_fn)
+        if gen_model_fn != None and initial_epoch>0 : self.generator.load_weights(gen_model_fn)
 
         # The generator takes noise and the target label as input
         # and generates the corresponding digit of that label
