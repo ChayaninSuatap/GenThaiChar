@@ -282,6 +282,6 @@ class ACGAN():
 
 if __name__ == '__main__':
     # acgan = ACGAN(initial_epoch=30250, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5')
-    acgan = ACGAN(latent_dim=300, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5', initial_epoch=9400)
-    acgan.train(epochs=99999, batch_size=100, sample_interval=50)
-    # acgan.sample_images_by_class(40)
+    acgan = ACGAN(latent_dim=400, dis_model_fn='saved_model/discriminator.hdf5', gen_model_fn='saved_model/generator.hdf5', initial_epoch=9400)
+    # acgan.train(epochs=99999, batch_size=100, sample_interval=50)
+    acgan.sample_images_by_class(50)
